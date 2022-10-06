@@ -31,8 +31,23 @@ TYPE
     unused0*, unused1*, unused2*: HUGEINT;
     END;
 
+(* dirent struct 
+struct dirent
+  {
+    __ino_t d_ino;
+    __off_t d_off;
+    unsigned short int d_reclen;
+    unsigned char d_type;
+    char d_name[256];
+  };
+*)
+
+PROCEDURE -findFirst(dir: ARRAY OF CHAR)
+  "";
+
 PROCEDURE -Aincludesysstat '#include <sys/stat.h>';
 PROCEDURE -Aincludesystypes '#include <sys/types.h>';
+PROCEDURE -Aincludedirent '#include <dirent.h>';
 
 PROCEDURE -mkdir(VAR path: ARRAY OF CHAR): INTEGER
   "(int)mkdir(path, 0755)";
