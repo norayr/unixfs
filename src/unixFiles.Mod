@@ -199,20 +199,4 @@ BEGIN
   END;
 END ExistsByName;
 
-PROCEDURE test0*;
-VAR
-  mode : LONGINT;
-     i : LONGINT;
-    st : Status;
-    fn : ARRAY 256 OF CHAR;
-BEGIN
-  COPY("/etc/passwd", fn);
-  i := stat(fn, st);
-  Out.String("st.mode is "); Out.Int(st.mode, 0); Out.Ln;
-  getStatusMode(st, mode);
-  Out.String("st.mode is also "); Out.Int(mode, 0); Out.Ln;
-  Out.Ln;
-END test0;
-
-
 END unixFiles.
