@@ -10,6 +10,7 @@ int main()
   printf ("size of d_reclen: %ld\n", sizeof(dir->d_reclen));
   printf ("size of d_type: %ld\n", sizeof(dir->d_type));
   printf ("size of d_name: %ld\n", sizeof(dir->d_name));
+  printf ("size of int: %ld\n", sizeof(int));
   return 0;
 
 }
