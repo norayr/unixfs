@@ -1,6 +1,10 @@
 MODULE test0;
-IMPORT unixFiles, Out;
+IMPORT unixFiles, Out, SYSTEM;
 
+PROCEDURE -Aincludestrings  '#include <string.h>';
+PROCEDURE -Aincludedirent   '#include <dirent.h>';
+
+(*
 PROCEDURE test01;
 VAR
   mode : LONGINT;
@@ -15,7 +19,7 @@ BEGIN
   Out.String("st.mode is also "); Out.Int(mode, 0); Out.Ln;
   Out.Ln;
 END test01;
-
+*)
 PROCEDURE test02;
 VAR
   d0: unixFiles.pdir;
@@ -25,6 +29,18 @@ BEGIN
   (*NEW(d0);*)
   (*NEW(d1);*)
   Out.String("test02"); Out.Ln;
+  d0 := unixFiles.openDir(".");
+  IF d0 # NIL THEN
+    REPEAT
+      d1 := unixFiles.readDir(d0);
+      IF d1 # NIL THEN
+        unixFiles.getDirentName(d1, s);
+        Out.String(s); Out.Ln
+      END
+    UNTIL d1 = NIL;
+  END;
+
+(*
   d0 := unixFiles.opendir("/home/tmp");
   IF d0 = 0 THEN
     Out.String("d0 is NIL"); Out.Ln
@@ -42,6 +58,7 @@ BEGIN
       END
     UNTIL d1 = NIL;
   END;
+*)  
 END test02;
 
 BEGIN
