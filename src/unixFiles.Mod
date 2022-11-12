@@ -6,8 +6,8 @@ CONST
   symlink* = 5; socket* = 6;
 
 TYPE
-  str = ARRAY [1] 32 OF CHAR;
-  pstr = POINTER [1] TO ARRAY OF CHAR;
+  str* = ARRAY [1] 512 OF CHAR;
+  pstr* = POINTER [1] TO ARRAY OF CHAR;
 
   fileInfo* = RECORD;
      name* : ARRAY 256 OF CHAR;
@@ -34,6 +34,44 @@ TYPE
     unused0*, unused1*, unused2*: HUGEINT;
     END;
 
+    pdir* = SYSTEM.ADDRESS;
+    (*pdir* = POINTER [1] TO dirStream;*)
+    dirStream = ARRAY 2048 OF CHAR; (* __dirstream struct should fit *)
+ 
+   (* pdirent* = SYSTEM.ADDRESS;*)
+(*
+   pdirent* = POINTER [1] TO dirent;
+   dirent = ARRAY 2048 OF CHAR;
+*)
+  pdirent* = POINTER [1] TO dirent;
+  dirent* = RECORD
+     ino : HUGEINT;
+     off : HUGEINT;
+  reclen : SYSTEM.BYTE;
+    type : SYSTEM.BYTE;
+    name : ARRAY 256 OF CHAR;
+  END;
+
+
+(* http://sourceware.org/git/?p=glibc.git;a=blob;f=sysdeps/unix/dirstream.h;h=8303f07fab6f6efaa39e51411ef924e712d995e0;hb=fa39685d5c7df2502213418bead44e9543a9b9ec
+
+struct __dirstream
+  {
+    int fd;                     /* File descriptor.  */
+
+    __libc_lock_define (, lock) /* Mutex lock for this structure.  */
+
+    size_t allocation;          /* Space allocated for the block.  */
+    size_t size;                /* Total valid data in the block.  */
+    size_t offset;              /* Current offset into the block.  */
+
+    off_t filepos;              /* Position of next entry to read.  */
+
+    /* Directory block.  */
+    char data[0] __attribute__ ((aligned (__alignof__ (void* ))));
+  };
+*)
+
 (* dirent struct 
 struct dirent
   {
@@ -44,14 +82,6 @@ struct dirent
     char d_name[256];
   };
 *)
-  dirent = RECORD
-     ino : HUGEINT;
-     off : HUGEINT;
-  reclen : INTEGER;
-    type : SHORTINT;
-    name : ARRAY 256 OF CHAR;
-  END;
-
 (*
 #include <dirent.h>
 #include <stdio.h>
@@ -103,9 +133,20 @@ int main(void)
 PROCEDURE -Aincludesysstat '#include <sys/stat.h>';
 PROCEDURE -Aincludesystypes '#include <sys/types.h>';
 PROCEDURE -Aincludedirent '#include <dirent.h>';
-(*
-PROCEDURE -opendir(VAR path: ARRAY OF CHAR)
-*)
+
+PROCEDURE -opendir*(path: ARRAY OF CHAR): pdir
+"opendir(path)";
+
+PROCEDURE -readdir*(VAR d: pdir): pdirent
+"readdir(d)";
+
+PROCEDURE getDirentName*(VAR d: pdirent; VAR s: str);
+BEGIN
+  Out.String("entered getDirentName"); Out.Ln;
+  COPY(d.name, s);
+  Out.String("exiting getDirentName"); Out.Ln;
+END getDirentName;
+
 PROCEDURE -mkdir(VAR path: ARRAY OF CHAR): INTEGER
   "(int)mkdir(path, 0755)";
 
@@ -141,7 +182,7 @@ PROCEDURE -isSock(mode: LONGINT): INTEGER
 "S_ISSOCK(mode)";
 
 PROCEDURE -getStatusMode*(VAR st: Status; VAR m : LONGINT)
-"memcpy(m, st.mode, 32)";
+"memcpy(m, st.mode, 4)";
 
 PROCEDURE Exists*(VAR fl : fileInfo): BOOLEAN;
 VAR
