@@ -79,7 +79,7 @@ END getDirentName;
 
 PROCEDURE -getDirentName*(d: pdirent; s: str)
 "strcpy(s, ((struct dirent* )d)->d_name)";
-(*
+
 PROCEDURE -mkdir(VAR path: ARRAY OF CHAR): INTEGER
   "(int)mkdir(path, 0755)";
 
@@ -172,5 +172,5 @@ BEGIN
     RETURN TRUE
   END;
 END ExistsByName;
-*)
+
 END unixFiles.
