@@ -14,6 +14,8 @@ TYPE
      attr- : SET
      END;
 
+  fileList* = POINTER TO ARRAY OF fileInfo;
+
   Status* = RECORD (* struct stat *)
     dev* : HUGEINT; (* dev_t 8 *)
     ino* : HUGEINT; (* ino 8 *)
@@ -117,32 +119,90 @@ PROCEDURE -isSock(mode: LONGINT): INTEGER
 PROCEDURE -getStatusMode*(VAR st: Status; VAR m : LONGINT)
 "memcpy(m, st.mode, 4)";
 
+PROCEDURE getAttr*(VAR fl: fileInfo; VAR st: Status);
+VAR
+  j: LONGINT;
+BEGIN
+    j := isDir(st.mode);
+    IF j # 0 THEN fl.attr := fl.attr + {dir} END;
+    j := isChar(st.mode);
+    IF j # 0 THEN fl.attr := fl.attr + {char} END;
+    j := isBlock(st.mode);
+    IF j # 0 THEN fl.attr := fl.attr + {block} END;
+    j := isReg(st.mode);
+    IF j # 0 THEN fl.attr := fl.attr + {file} END;
+    j := isFIFO(st.mode);
+    IF j # 0 THEN fl.attr := fl.attr + {fifo} END;
+    j := isLnk(st.mode);
+    IF j # 0 THEN fl.attr := fl.attr + {symlink} END;
+    j := isSock(st.mode);
+    IF j # 0 THEN fl.attr := fl.attr + {socket} END;
+END getAttr;
+
 PROCEDURE Exists*(VAR fl : fileInfo): BOOLEAN;
 VAR
-  i : LONGINT;
+  i, j : LONGINT;
   st: Status;
 BEGIN
   fl.attr := {};
   i := stat(fl.name, st);
   IF i < 0 THEN RETURN FALSE  END;
   IF i = 0 THEN (* file exists*) 
-    i := isDir(st.mode);
-    IF i # 0 THEN fl.attr := fl.attr + {dir} END;
-    i := isChar(st.mode);
-    IF i # 0 THEN fl.attr := fl.attr + {char} END;
-    i := isBlock(st.mode);
-    IF i # 0 THEN fl.attr := fl.attr + {block} END;
-    i := isReg(st.mode);
-    IF i # 0 THEN fl.attr := fl.attr + {file} END;
-    i := isFIFO(st.mode);
-    IF i # 0 THEN fl.attr := fl.attr + {fifo} END;
-    i := isLnk(st.mode);
-    IF i # 0 THEN fl.attr := fl.attr + {symlink} END;
-    i := isSock(st.mode);
-    IF i # 0 THEN fl.attr := fl.attr + {socket} END;
+    getAttr(fl, st);
     RETURN TRUE
   END;
 END Exists;
+
+PROCEDURE getFileList*(VAR path: ARRAY OF CHAR): fileList;
+VAR
+  d0: pdir;
+  d1: pdirent;
+  s: str;
+  i, j : INTEGER;
+  f: fileInfo;
+  fl: fileList;
+  k: LONGINT;
+  st: Status;
+BEGIN
+  fl := NIL;
+  (* first lets get quantity of files *)
+  d0 := opendir(path);
+  IF d0 # NIL THEN
+    i := 0;
+    REPEAT
+      d1 := readdir(d0);
+      IF d1 # NIL THEN
+        INC(i);
+      END
+    UNTIL d1 = NIL;
+  END;
+  (* now allocate array and loop once more *)
+  (* this will work properly in case suddenly more files won't appear in a directory *)
+  (* otherwise it'll return only first i number of files *)
+  (* TODO better way is to return a stringlist *)
+  NEW(fl, i);
+
+  d0 := opendir(path);
+  IF d0 # NIL THEN
+    j := 0;
+    REPEAT
+      d1 := readdir(d0);
+      IF d1 # NIL THEN
+        getDirentName(d1, s);
+        COPY(s, f.name);
+        f.attr := {};
+        k := stat(f.name, st);
+        IF k = 0 THEN
+          getAttr(f, st); 
+          fl[j] := f;
+          INC(j);
+        END;
+      END
+    UNTIL (j >= i) OR (d1 = NIL);
+  END;
+  RETURN fl;
+END getFileList;
+
 
 PROCEDURE ExistsByName*(VAR fileName : ARRAY OF CHAR): BOOLEAN;
 VAR
