@@ -13,7 +13,7 @@ test:
 		echo Run make, first; \
 		exit 1;               \
 	fi
-	@cd build; voc ${ROOTDIR}/../tests/test0.Mod -m \
+	@cd build; voc ${ROOTDIR}/../tests/testUnixFiles.Mod -m \
 		       > /dev/null 2>&1                               \
 		       || (echo Failed to compile, have you run make? \
 			&& exit 1)
