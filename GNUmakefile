@@ -6,6 +6,6 @@ current_dir := $(notdir $(patsubst %/,%,$(dir $(mkfile_path))))
 
 all:
 			mkdir -p $(BUILD)
-			cd $(BUILD) && voc -s $(mkfile_dir_path)/src/unixFiles.Mod
+			cd $(BUILD) && $(VOC) -s $(mkfile_dir_path)/src/unixFiles.Mod
 test:
-			cd $(BUILD) && voc -m $(mkfile_dir_path)/tests/testUnixFiles.Mod
+			cd $(BUILD) && $(VOC) -m $(mkfile_dir_path)/tests/testUnixFiles.Mod
